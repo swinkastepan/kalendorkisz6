@@ -34,7 +34,6 @@ button {
     font-weight: bold;
 }
 
-/* ⏳ animacja czasu */
 #kalendarz {
     margin-top: 30px;
     transition: opacity 0.35s ease, transform 0.35s ease;
@@ -52,7 +51,9 @@ table {
 }
 
 tr {
-    direction: rtl; /* ⬅️ znikanie z lewej */
+    display: flex;
+    justify-content: flex-end;
+    gap: 2px;
 }
 
 td {
@@ -63,9 +64,17 @@ td {
     background: rgba(255,255,255,0.15);
 }
 
+/* 🟡 ACTIVE */
 td.active {
     background: yellow;
     color: black;
+    font-weight: bold;
+}
+
+/* 🔴 WEEKEND */
+td.weekend {
+    background: #ff4d4d;
+    color: white;
     font-weight: bold;
 }
 </style>
@@ -85,12 +94,12 @@ td.active {
 
 <script>
 
-const START = new Date("0001-01-01");
+const START = new Date("2016-01-02");
 
 const months = ["mrożąc","ciepłąc","środnąc","kolorąc","kończąc"];
 const weekdays = ["permulan","erta","dopo","durin","keskela","halvim","naidvara","samstag","alafia","festo"];
 
-/* 📅 SYSTEM TYGODNI */
+/* 📅 TYGODNIE */
 function getWeekLength(day) {
     if (day <= 30) return 10;
 
@@ -99,23 +108,20 @@ function getWeekLength(day) {
     let sum = 30;
 
     for (let i = 0; i < pattern.length; i++) {
-        if (day <= sum + pattern[i]) {
-            return pattern[i];
-        }
+        if (day <= sum + pattern[i]) return pattern[i];
         sum += pattern[i];
     }
 
-    return 2; // 73–74
+    return 2;
 }
 
-/* ⏳ ANIMACJA CZASU */
+/* ⏳ ANIMACJA */
 function przelicz() {
     const input = document.getElementById("data").value;
     if (!input) return alert("Wybierz datę!");
 
     const kal = document.getElementById("kalendarz");
 
-    // fade-out
     kal.classList.add("hide");
 
     setTimeout(() => {
@@ -157,7 +163,7 @@ function przelicz() {
     }, 300);
 }
 
-/* 📅 RYSOWANIE */
+/* 📅 RYSOWANIE (POPRAWIONE PRIORYTETY) */
 function generujKalendarz(activeDay) {
     let html = "<table>";
 
@@ -168,12 +174,27 @@ function generujKalendarz(activeDay) {
 
         html += "<tr>";
 
+        let row = [];
+
         for (let i = 0; i < weekLen && day <= 74; i++) {
-            let cls = (day === activeDay) ? "class='active'" : "";
-            html += `<td ${cls}>${day}</td>`;
+
+            let classes = [];
+
+            const isActive = (day === activeDay);
+            const isWeekend = (i >= weekLen - 2);
+
+            // 🟡 ACTIVE MA NAJWYŻSZY PRIORYTET
+            if (isActive) {
+                classes.push("active");
+            } else if (isWeekend) {
+                classes.push("weekend");
+            }
+
+            row.push(`<td class="${classes.join(' ')}">${day}</td>`);
             day++;
         }
 
+        html += row.join("");
         html += "</tr>";
     }
 
@@ -182,7 +203,7 @@ function generujKalendarz(activeDay) {
     document.getElementById("kalendarz").innerHTML = html;
 }
 
-/* 🎬 FILM PO 1 SPACJI */
+/* 🎬 FILM NA SPACJĘ */
 document.addEventListener("keydown", function(e) {
     if (e.code === "Space") {
         e.preventDefault();
