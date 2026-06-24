@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>Kalendorkisz</title>
+
+<style>
+body {
+    font-family: Arial;
+    text-align: center;
+    background: #2f80ff;
+    color: white;
+    padding: 30px;
+}
+
+input, button {
+    font-size: 18px;
+    padding: 10px;
+    margin: 10px;
+    border-radius: 8px;
+    border: none;
+}
+
+button {
+    background: white;
+    color: #2f80ff;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#wynik {
+    font-size: 24px;
+    margin-top: 20px;
+    font-weight: bold;
+}
+
+/* ⏳ animacja czasu */
+#kalendarz {
+    margin-top: 30px;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+#kalendarz.hide {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+}
+
+/* 📅 tabela */
+table {
+    margin: auto;
+    border-collapse: collapse;
+}
+
+tr {
+    direction: rtl; /* ⬅️ znikanie z lewej */
+}
+
+td {
+    border: 1px solid rgba(255,255,255,0.25);
+    padding: 10px;
+    min-width: 35px;
+    text-align: center;
+    background: rgba(255,255,255,0.15);
+}
+
+td.active {
+    background: yellow;
+    color: black;
+    font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<h1>📅 Kalendorkisz</h1>
+
+<input type="date" id="data">
+<button onclick="przelicz()">Sprawdź</button>
+
+<div id="wynik"></div>
+<div id="kalendarz"></div>
+
+<footer>zrobione przez swinkastepan</footer>
+
+<script>
+
+const START = new Date("0001-01-01");
+
+const months = ["mrożąc","ciepłąc","środnąc","kolorąc","kończąc"];
+const weekdays = ["permulan","erta","dopo","durin","keskela","halvim","naidvara","samstag","alafia","festo"];
+
+/* 📅 SYSTEM TYGODNI */
+function getWeekLength(day) {
+    if (day <= 30) return 10;
+
+    const pattern = [9,8,7,6,5,4,3,2];
+
+    let sum = 30;
+
+    for (let i = 0; i < pattern.length; i++) {
+        if (day <= sum + pattern[i]) {
+            return pattern[i];
+        }
+        sum += pattern[i];
+    }
+
+    return 2; // 73–74
+}
+
+/* ⏳ ANIMACJA CZASU */
+function przelicz() {
+    const input = document.getElementById("data").value;
+    if (!input) return alert("Wybierz datę!");
+
+    const kal = document.getElementById("kalendarz");
+
+    // fade-out
+    kal.classList.add("hide");
+
+    setTimeout(() => {
+
+        const inputDate = new Date(input + "T00:00:00Z");
+        const diff = Math.floor((inputDate - START) / (1000*60*60*24));
+
+        const totalDays = 74 * 5;
+        const dayOfYear = ((diff % totalDays) + totalDays) % totalDays;
+
+        const monthIndex = Math.floor(dayOfYear / 74);
+        const dayInMonth = (dayOfYear % 74) + 1;
+
+        let d = dayInMonth;
+        let currentDay = 1;
+        let weekDayIndex = 0;
+
+        while (true) {
+            let len = getWeekLength(currentDay);
+
+            if (d <= len) {
+                weekDayIndex = d - 1;
+                break;
+            }
+
+            d -= len;
+            currentDay += len;
+        }
+
+        document.getElementById("wynik").innerText =
+            `W Kalendorkiszu: ${weekdays[weekDayIndex]}, ${dayInMonth} dzień miesiąca ${months[monthIndex]}`;
+
+        generujKalendarz(dayInMonth);
+
+        requestAnimationFrame(() => {
+            kal.classList.remove("hide");
+        });
+
+    }, 300);
+}
+
+/* 📅 RYSOWANIE */
+function generujKalendarz(activeDay) {
+    let html = "<table>";
+
+    let day = 1;
+
+    while (day <= 74) {
+        let weekLen = getWeekLength(day);
+
+        html += "<tr>";
+
+        for (let i = 0; i < weekLen && day <= 74; i++) {
+            let cls = (day === activeDay) ? "class='active'" : "";
+            html += `<td ${cls}>${day}</td>`;
+            day++;
+        }
+
+        html += "</tr>";
+    }
+
+    html += "</table>";
+
+    document.getElementById("kalendarz").innerHTML = html;
+}
+
+/* 🎬 FILM PO 1 SPACJI */
+document.addEventListener("keydown", function(e) {
+    if (e.code === "Space") {
+        e.preventDefault();
+        window.open("https://youtu.be/xDtVgHcWr64", "_blank");
+    }
+});
+
+</script>
+
+</body>
+</html>
